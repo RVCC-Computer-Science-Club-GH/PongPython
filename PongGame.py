@@ -337,10 +337,10 @@ while run:
             exit.text = font.render("Exit Match", 1, ("white"))
         if resume.rect.collidepoint(pos):
             font = pygame.font.Font(None, 50)
-            resume.text = font.render("Exit Match", 1, ("grey"))
+            resume.text = font.render("Resume", 1, ("grey"))
         else:
             font = pygame.font.Font(None, 50)
-            resume.text = font.render("Exit Match", 1, ("white"))
+            resume.text = font.render("Resume", 1, ("white"))
         '''
         font = pygame.font.Font(None, 36)
         text = font.render("Exit Game", 1, (255,255,255))
