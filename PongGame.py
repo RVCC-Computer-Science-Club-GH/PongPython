@@ -20,7 +20,7 @@ DELAY_COUNTER = 0
 
 
 #to check whether in menu or not
-paused = True
+paused = False
 started = True
 
 
@@ -94,7 +94,10 @@ class Ball(pygame.sprite.Sprite):
         self.SCORED = False
     
     def update(self, x, y):
-
+        
+        if paused:
+            self.rect.y = y
+            self.rect.x = x
         
         #moves ball
         if not self.SCORED:
@@ -110,8 +113,29 @@ class Ball(pygame.sprite.Sprite):
             self.rect.x += 5
         if self.rect.colliderect(square1) or self.rect.colliderect(square2):
             self.velocityX = -self.velocityX
+            if self.velocityX <= 12 and self.velocityX >= -12:
+                self.velocityX = self.velocityX * 1.05
+            if self.velocityY < 1 and self.velocityY > -1:
+                side2 = random.randint(0,1)
+                if side2 == 0:
+                    side2 = -1
+                angle = random.randint(-45, 45)
+                self.velocityY = 3*(2**0.5)*sin(radians(angle)) * side2
+                
         
-
+    def randomMovement(self):
+        side = random.randint(0,1)
+        side2 = random.randint(0,1)
+        if side == 0:
+            side = -1
+        if side2 == 0:
+            side2 = -1
+        angle = random.randint(-45, 45)
+        self.rect.x = 500
+        self.rect.y = 300
+        self.image.fill("white")
+        self.velocityX = 3*(2**0.5)*cos(radians(angle)) * side
+        self.velocityY = 3*(2**0.5)*sin(radians(angle)) * side2
         
 
         
@@ -143,6 +167,7 @@ class Button(pygame.sprite.Sprite):
     def update(self, x, y):
         screen.blit(self.text, (x, y))
         
+    #A countdown for when starting or resuming a match
     def countdown(self):
         font = pygame.font.Font(None, 36)
         text = font.render("3", 1, (255,255,255))
@@ -169,8 +194,8 @@ square1 = Square("white", 950, 300, 10, 75, pygame.K_UP, pygame.K_DOWN)
 square2 = Square("white", 50, 300, 10, 75, pygame.K_w, pygame.K_s)
 border_Top = Square("white", 500, 0, 1000, 10, None, None)
 border_Bottom = Square("white", 500, 600, 1000, 10, None, None)
-border_Right = Square("black", 1000, 300, 10, 600, None, None)
-border_Left = Square("black", 0, 300, 10, 600, None, None)
+border_Right = Square("black", 1000, 300, 90, 600, None, None)
+border_Left = Square("black", 0, 300, 90, 600, None, None)
 ball = Ball("white", 500, 300, 25, 25)
 start = Button("black", 500, 250,"Start Match", 200, 50, "white")
 exit = Button("black", 500, 300, "Exit Match", 200, 50, "white")
@@ -188,10 +213,10 @@ pauseMenu = pygame.sprite.Group()
 #create square and add to group
 squares.add(square1)
 squares.add(square2)
-borders.add(border_Top)
-borders.add(border_Bottom)
 borders.add(border_Right)
 borders.add(border_Left)
+borders.add(border_Top)
+borders.add(border_Bottom)
 balls.add(ball)
 startMenu.add(start)
 startMenu.add(leave)
@@ -222,9 +247,11 @@ while run:
     
     #draw sprite group
     if not paused and not started:
-        squares.draw(screen)
         borders.draw(screen)
+        squares.draw(screen)
         balls.draw(screen)
+        print(ball.velocityX)
+        print(ball.velocityY)
         
         
    # squares.render(screen)
@@ -247,14 +274,19 @@ while run:
             pos = pygame.mouse.get_pos()
             if exit.rect.collidepoint(pos) and paused and not started:
                 started = True
-            if resume.rect.collidepoint(pos) and paused and not started:
+                paused = False
+            elif resume.rect.collidepoint(pos) and paused and not started:
                 resume.countdown()
                 paused = False
-            if start.rect.collidepoint(pos) and started and paused:
+            elif start.rect.collidepoint(pos) and started and not paused:
                 start.countdown()
+                PLAYER1_SCORE = 0
+                PLAYER2_SCORE = 0
+                ball.rect.x = 500
+                ball.rect.y = 300
                 started = False
                 paused = False
-            if leave.rect.collidepoint(pos) and started and paused:
+            elif leave.rect.collidepoint(pos) and started and not paused:
                 pygame.quit()
                 sys.exit(0)
             '''
@@ -349,7 +381,7 @@ while run:
         
     
     #Start Menu Print
-    if paused and started:
+    if not paused and started:
         font = pygame.font.Font(None, 150)
         text = font.render("PONG", 1, (255,255,255))
         screen.blit(text, (350, 100))
@@ -422,12 +454,14 @@ while run:
     #hides ball if it hits either right or left side of screen
     if ball.rect.colliderect(border_Right):
         #self.rect.center = (x, y)
-        ball.rect.x -= 10
         ball.SCORED = True
+        ball.rect.x = 500
+        ball.rect.y = 300
         ball.image.fill("black")
     elif ball.rect.colliderect(border_Left):
-        ball.rect.x += 10
         ball.SCORED = True
+        ball.rect.x = 500
+        ball.rect.y = 300
         ball.image.fill("black")
     
     #starts a counter if the ball is scored and respawns the ball in a random direction after a certain amount of time
@@ -436,6 +470,9 @@ while run:
     elif DELAY_COUNTER == 50: #controls how long it take for the ball to respawn
         DELAY_COUNTER = 0
         #respawns the ball and moves it in a random direction
+        ball.randomMovement()
+        ball.SCORED = False
+        '''
         side = random.randint(0,1)
         side2 = random.randint(0,1)
         if side == 0:
@@ -449,6 +486,7 @@ while run:
         ball.velocityX = 3*(2**0.5)*cos(radians(angle)) * side
         ball.velocityY = 3*(2**0.5)*sin(radians(angle)) * side2
         ball.SCORED = False
+        '''
 
         
         #ball.velocityX += random.randint()
