@@ -22,6 +22,7 @@ DELAY_COUNTER = 0
 #to check whether in menu or not
 paused = False
 started = True
+win = False
 
 
 
@@ -198,9 +199,10 @@ border_Right = Square("black", 1000, 300, 90, 600, None, None)
 border_Left = Square("black", 0, 300, 90, 600, None, None)
 ball = Ball("white", 500, 300, 25, 25)
 start = Button("black", 500, 250,"Start Match", 200, 50, "white")
-exit = Button("black", 500, 300, "Exit Match", 200, 50, "white")
+exit = Button("black", 500, 350, "Exit Match", 200, 50, "white")
 resume = Button("black", 500, 250, "Resume", 200, 50, "white")
 leave = Button("black", 500, 300, "Exit Game", 200, 50, "white")
+restart = Button("black", 500, 300, "Restart Match", 200, 50, "white")
 
 #create sprite group for squares
 squares = pygame.sprite.Group()
@@ -208,6 +210,7 @@ borders = pygame.sprite.Group()
 balls = pygame.sprite.Group()
 startMenu = pygame.sprite.Group()
 pauseMenu = pygame.sprite.Group()
+winMenu = pygame.sprite.Group()
 
 
 #create square and add to group
@@ -236,7 +239,7 @@ while run:
     #update sprite group
     
     #squares.update()
-    if not paused and not started:
+    if not paused and not started and not win:
         balls.update(500, 300)  
     
     #collisions testing
@@ -246,12 +249,10 @@ while run:
     square1.center = pos
     
     #draw sprite group
-    if not paused and not started:
+    if not paused and not started and not win:
         borders.draw(screen)
         squares.draw(screen)
         balls.draw(screen)
-        print(ball.velocityX)
-        print(ball.velocityY)
         
         
    # squares.render(screen)
@@ -272,13 +273,16 @@ while run:
         if event.type == pygame.MOUSEBUTTONDOWN:
             #get mouse coordinates
             pos = pygame.mouse.get_pos()
-            if exit.rect.collidepoint(pos) and paused and not started:
+            if exit.rect.collidepoint(pos) and (paused or win) and not started:
+                PLAYER1_SCORE = 0
+                PLAYER2_SCORE = 0
                 started = True
                 paused = False
-            elif resume.rect.collidepoint(pos) and paused and not started:
+                win = False
+            elif resume.rect.collidepoint(pos) and paused and not started and not win:
                 resume.countdown()
                 paused = False
-            elif start.rect.collidepoint(pos) and started and not paused:
+            elif start.rect.collidepoint(pos) and started and not paused and not win:
                 start.countdown()
                 PLAYER1_SCORE = 0
                 PLAYER2_SCORE = 0
@@ -286,7 +290,15 @@ while run:
                 ball.rect.y = 300
                 started = False
                 paused = False
-            elif leave.rect.collidepoint(pos) and started and not paused:
+            elif restart.rect.collidepoint(pos) and (paused or win) and not started:
+                restart.countdown()
+                PLAYER1_SCORE = 0
+                PLAYER2_SCORE = 0
+                ball.rect.x = 500
+                ball.rect.y = 300
+                paused = False
+                win = False 
+            elif leave.rect.collidepoint(pos) and started and not paused and not win:
                 pygame.quit()
                 sys.exit(0)
             '''
@@ -294,7 +306,7 @@ while run:
             square = Square(random.choice(colors), pos[0], pos[1])
             squares.add(square)
             '''
-        if not paused and not started:  
+        if not paused and not started and not win:  
             if event.type == pygame.KEYDOWN:
                 squares.update(event.key)
                 if event.key == pygame.K_ESCAPE:
@@ -351,14 +363,14 @@ while run:
         if event.type == pygame.QUIT:
             run = False
             
-    
     #Pause Menu print
-    if paused and not started:
+    if paused and not started and not win:
         font = pygame.font.Font(None, 100)
         text = font.render("PAUSED", 1, (255,255,255))
         screen.blit(text, (375, 150))
         pauseMenu.draw(screen)
-        exit.update(410, 280)
+        exit.update(410, 330)
+        restart.update(410,280)
         resume.update(410,230)
         pos = pygame.mouse.get_pos()
         if exit.rect.collidepoint(pos):
@@ -373,6 +385,12 @@ while run:
         else:
             font = pygame.font.Font(None, 50)
             resume.text = font.render("Resume", 1, ("white"))
+        if restart.rect.collidepoint(pos):
+            font = pygame.font.Font(None, 50)
+            restart.text = font.render("Restart Match", 1, ("grey"))
+        else:
+            font = pygame.font.Font(None, 50)
+            restart.text = font.render("Restart Match", 1, ("white"))
         '''
         font = pygame.font.Font(None, 36)
         text = font.render("Exit Game", 1, (255,255,255))
@@ -381,13 +399,13 @@ while run:
         
     
     #Start Menu Print
-    if not paused and started:
+    if not paused and started and not win:
         font = pygame.font.Font(None, 150)
         text = font.render("PONG", 1, (255,255,255))
         screen.blit(text, (350, 100))
         startMenu.draw(screen)
-        start.update(410, 230)
-        leave.update(410, 280)
+        start.update(400, 230)
+        leave.update(400, 280)
         pos = pygame.mouse.get_pos()
         if start.rect.collidepoint(pos):
             font = pygame.font.Font(None, 50)
@@ -407,7 +425,28 @@ while run:
         screen.blit(text, (415, 100))  
         '''
         
-            
+    #Win menu print
+    if not paused and not started and win:
+        font = pygame.font.Font(None, 125)
+        if PLAYER1_SCORE == 5:
+            text = font.render("Player 1 Wins!!", 1, ("white"))
+        elif PLAYER2_SCORE == 5:
+            text = font.render("Player 2 Wins!!", 1, ("white"))
+        screen.blit(text, (200,150))
+        restart.update(400, 280)
+        exit.update(400, 330)
+        if restart.rect.collidepoint(pos):
+            font = pygame.font.Font(None, 50)
+            restart.text = font.render("Restart Match", 1, ("grey"))
+        else:
+            font = pygame.font.Font(None, 50)
+            restart.text = font.render("Restart Match", 1, ("white"))
+        if exit.rect.collidepoint(pos):
+            font = pygame.font.Font(None, 50)
+            exit.text = font.render("Exit Match", 1, ("grey"))
+        else:
+            font = pygame.font.Font(None, 50)
+            exit.text = font.render("Exit Match", 1, ("white"))
             
     #paddle movement (squares group)
     if square1.up_Pressed:
@@ -491,8 +530,9 @@ while run:
         
         #ball.velocityX += random.randint()
     
-    
-
+    #win condition
+    if PLAYER1_SCORE == 5 or PLAYER2_SCORE == 5:
+        win = True
 
     
             
