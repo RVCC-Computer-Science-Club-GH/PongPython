@@ -145,7 +145,6 @@ class Ball(pygame.sprite.Sprite):
         self.SCORED = False
     
     def update(self, x, y):
-        print(self.rect.x)
         
         if paused:
             self.rect.y = y
@@ -169,8 +168,9 @@ class Ball(pygame.sprite.Sprite):
         if self.rect.colliderect(square1):
             self.rect.x = 1170
             self.velocityX = -self.velocityX
-            if self.velocityX <= 11.5 and self.velocityX >= -11.5:
-                self.velocityX = self.velocityX * 1.15   
+            #original speed 11.5
+            if self.velocityX <= 12.5 and self.velocityX >= -12.5:
+                self.velocityX = self.velocityX * 1.25 
             if self.velocityY < 1.5 and self.velocityY > -1.5:
                 side2 = random.randint(0,1)
                 if side2 == 0:
